@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+    <!--Title of the web page-->
+    <title>Krishna WebGL Demonstration</title>
+    <!--Set the meta-->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--Link the cascading style sheet-->
+    <link rel="stylesheet" href="webgl.css" type="text/css">
+    <!--Link the scripts-->
+    <script src="sylvester.js" type="text/javascript"></script>
+    <script src="glUtils.js" type="text/javascript"></script>
+    <script src="script.js" type="text/javascript"></script>
+
+    <!--  Notes on the Fragment shader program Krishna Bhattarai-->
+    <!-- Storage qualifiers:  constant, attribute, uniform, varying etc-->
+    <!-- const: is a compile time constant, or a function parameter that is read only-->
+    <!-- attribute: a linkage between a vertex shader and OpenGL ES for pre-vertex data-->
+    <!-- uniform: value does not change across the primite being processed, uniforms form the linkage between a shader, OpenGL ES and the applicatoin-->
+    <!-- varying: a linkage between a vertex shader and a fragment shader for interpolated data-->
+    <!-- Precision Qualifieres: highp, mediump, lowp-->
+    <!-- lowp: Range and precision that can be less than mediump but still represents all color values for any color channel-->
+    <!-- mediump-->
+    <!-- highp -->
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+      varying lowp vec4 vColor;
+      void main(void)
+      {
+        gl_FragColor = vec4(0.5, 3, 0.5, 1.0);
+      }
+    </script>
+
+    <!-- Notes on the Vertex shader program Krishna Bhattarai -->
+    <!-- attribute: a linkage between a vertex shader and OpenGL ES for pre-vertex data-->
+    <!-- vec3: a three component floating point vector-->
+    <!-- vec4: a four component floating point vector-->
+    <!-- uniform: value does not change across the primite being processed, uniforms form the linkage between a shader, OpenGL ES and the applicatoin-->
+    <!-- lowp: Range and precision that can be less than mediump but still represents all color values for any color channel-->
+    <!-- mat4 a 4*4 floating point matrix-->
+    <!--uMVMatrix: uniform Model View matrix-->
+    <!--uPMatrix: Uniform Projection matrix-->
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      attribute vec4 aVertexColor;
+      uniform mat4 uMVMatrix;
+      uniform mat4 uPMatrix;
+      varying lowp vec4 vColor;
+
+      void main(void)
+      {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vColor = aVertexColor;
+        //vColor = vec4(0, 0, 5, 1);
+      }
+    </script>
+
+</head>
+
+<body onload="start()">
+<canvas id="glcanvas" width="640" height="480">
+    Your browser doesn't appear to support the <code>&lt;canvas&gt;</code> element.
+</canvas>
+</body>
+</html>
