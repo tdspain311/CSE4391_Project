@@ -1,0 +1,32 @@
+c
+i front
+t parallel
+e 0 0 4
+l 0 0 -1
+u 0 1 0
+w -4 4 -4 4 1 100
+s 0.1 0.1 0.4 0.4
+c
+i side
+t parallel
+e 4 0 0
+l 0 0 0
+u 0 1 0
+w -4 4 -4 4 1 100
+s 0.6 0.1 0.9 0.4
+c
+i top
+t parallel
+e 0 4 0
+l 0 -1 0
+u 0 0 -1
+w -4 4 -4 4 1 100
+s 0.1 0.6 0.4 0.9
+c
+i perspective_1
+t perspective
+e 5 5 5
+l 0 0 1
+u 0 1 0
+w -2 2 -3 3 5 20
+s 0.5 0.5 0.75 0.75

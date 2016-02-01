@@ -99,7 +99,7 @@ function mht(m) {
 
 //
 // gluLookAt
-//
+// camera matrix
 function makeLookAt(ex, ey, ez,
                     cx, cy, cz,
                     ux, uy, uz)
@@ -191,3 +191,10 @@ function makeOrtho(left, right, bottom, top, znear, zfar)
            [0, 0, 0, 1]]);
 }
 
+function createIdentity()
+{
+    return $M([[1, 0, 0, 0],
+               [0, 1, 0, 0],
+               [0, 0, 1, 0],
+               [0, 0, 0, 1]]);
+}

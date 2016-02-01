@@ -69,10 +69,10 @@ def load_ply(file_name):
         print(len(FACES))
 
 # Name of the txt files
-file_name = "pyramid.txt"
+# file_name = "pyramid.txt"
 # file_name = "cow.txt"
 # file_name = "bunny.txt"
-# file_name = "teapot.txt"
+file_name = "teapot.txt"
 load_txt(file_name)
 
 # Name of the ply files
