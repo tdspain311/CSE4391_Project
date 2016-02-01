@@ -43,7 +43,7 @@ normals or colors are not accounted for
 """
 def load_ply(file_name):
     with open(file_name) as fp:
-        data = fp.readlines()[9:]
+        data = fp.readlines()[10:]
 
         vertices = []
         faces = []
@@ -63,17 +63,20 @@ def load_ply(file_name):
 
         VERTICES = list(itertools.chain(*vertices))
         FACES = list(itertools.chain(*faces))
-        print("var vertices =", VERTICES, ";")
+
+        fp = open("head_ascii.txt", "w")
+        fp.write(str(VERTICES))
+        # print("var vertices =", VERTICES, ";")
         print(len(VERTICES))
-        print("var faces = ",FACES, ";")
-        print(len(FACES))
+        # print("var faces = ",FACES, ";")
+        # print(len(FACES))
 
 # Name of the txt files
 # file_name = "pyramid.txt"
 # file_name = "cow.txt"
 # file_name = "bunny.txt"
-file_name = "teapot.txt"
-load_txt(file_name)
+# file_name = "teapot.txt"
+# load_txt(file_name)
 
 # Name of the ply files
 # file_name = "weathervane.ply"
@@ -88,4 +91,5 @@ load_txt(file_name)
 # file_name = "chopper.ply"
 # file_name = "dolphins.ply"
 # file_name = "pickup_big.ply"
-# load_ply(file_name)
+file_name = "head1.ply"
+load_ply(file_name)
