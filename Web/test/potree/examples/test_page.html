@@ -104,8 +104,9 @@
 		viewer.setPointSizing("Fixed");
 		viewer.setQuality("Squares");
 		viewer.setPointBudget(1*1000*1000);
-		//viewer.setOpacity(0.03);
-		//viewer.setMinNodeSize(100);
+		viewer.pointColorType = 3;
+		viewer.setOpacity(0.03);
+		viewer.setMinNodeSize(100);
 
 		
 	viewer.addPointCloud("../resources/pointclouds/test_page/cloud.js");
