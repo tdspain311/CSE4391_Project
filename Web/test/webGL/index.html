@@ -13,6 +13,7 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
 		<script src="js/PLYLoader.js"></script>
 		<script src="js/OrbitControls.js"></script>
+		<script src="js/testScript.js"></script>
 		<script>
 		
 			var camera, controls, scene, renderer;
@@ -79,16 +80,16 @@
 
 					scene.add( mesh );
 						
-					for (i=0; i < 5; i++) {
-						console.log(temp[i]);
+					for (i=0; i < temp.length; i++) {
+						//console.log(temp[i]);
 						newList[i] = [temp[i].a, temp[i].b, temp[i].c];
 						
 					}
-					var flattened = newList.reduce(function(a, b) {
+					vertices = newList.reduce(function(a, b) {
 						return a.concat(b);
 					}, []);
-					
-					console.log(flattened);
+					showVerts(vertices);
+					//console.log(flattened);
 				} );
 				
 				// Lighting
