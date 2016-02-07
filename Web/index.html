@@ -1,16 +1,165 @@
-<html>
-	<body>
-		<h1>TESTING</h1>
-		<ul>
-			<li>
-				<a href='test/potree/index.html'>Potree Test Site</a>
-			</li>
-			<li>
-				<a href='test/webGL/index.html'>WebGL Test Site</a>
-			</li>
-			<li>
-				<a href='test/Threejs/index.html'>Three.js Test Site</a>
-			</li>
-		</ul>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>FlatSpace Home</title>
+
+	<!-- Bootstrap -->
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+
+		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+		<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+	<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+	<![endif]-->
+	<style>
+		.navbar-brand {
+			font-size:1.8em;
+		}
+		
+		#topContainer {
+			background-image:url("img/background.jpg");
+			height:1000px;
+			width:100%;
+			background-size:cover;
+		}
+		
+		#details {
+			height: 100%;
+		}
+		
+		#download {
+			background-color:#B0D1FB;
+			padding-top:100px;
+			padding-bottom:200px;
+			width:100%;
+		}
+
+		#topRow {
+			margin-top:100px;
+			text-align:center;
+			color: #bfbfbf;
+			text-shadow: 2px 2px black;
+		}
+
+		#topRow h1 {
+			font-size:300%;
+		}
+		
+		.bold {
+			font-weight:bold;
+		}
+		
+		.marginTop {
+			margin-top:65px;
+		}
+		
+		.center {
+			text-align:center;
+		}
+		
+		.title {
+			margin-top:100px;
+			font-size:300%;
+		}
+		
+		.marginBottom {
+			margin-bottom:30px;
+		}
+		
+		.appstoreImage {
+			width:250px;
+		}
+	</style>
+	
+	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	
+	<script>
+		$(".contentContainer").css("min-height",$(window).height());
+	</script>
+	
+	</head>
+	<body data-spy="scroll" data-target=".navbar-collapse">
+	<nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">FlatSpace</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#topContainer">Home</a></li>
+            <li><a href="#details">About</a></li>
+            <li><a href="#download">Download The App</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Demos <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+				<li><a href="test/webGL/index.html">WebGL</a></li>
+				<li><a href="test/Threejs/index.html">Three.js</a></li>
+				<li><a href="test/potree/index.html">Potree</a></li>
+              </ul>
+            </li>
+          </ul>
+
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+		<div class="container contentContainer" id="topContainer">
+			<div class="row">
+				<div class="col-md-6 col-md-offset-3" id="topRow">
+					<h1 class="marginTop">FlatSpace Renderer</h1>
+					<p class="lead">TODO: ***Info about the browser app***</p>
+					<p>TODO: ***More info about the browser app and Tango***</p>
+				</div>
+			</div>
+		</div>
+		<div class="container contentContainer" id="details">
+			<div class="row" class="center">
+				<h1 class="center title">FlatSpace PointCloud Renderer</h1>
+				<p class="lead center">TODO: ***Summary of the entire app***</p>
+			</div>
+			<div class="row marginBottom">
+				<div class="col-md-4 marginTop">
+					<h2>
+						<span class="glyphicon glyphicon-phone"/> Tango</h2>
+					<p>TODO: ***A brief description of the Tango app process to generate pointcloud***</p>
+					<p>TODO: ***Add screenshot of tango app***</p>
+				</div>
+				<div class="col-md-4 marginTop">
+					<h2>
+						<span class="glyphicon glyphicon-cloud-upload"/> Upload</h2>
+					<p>TODO: ***A brief description of the upload process to the webserver***</p>
+				</div>
+				<div class="col-md-4 marginTop">
+					<h2>
+						<span class="	glyphicon glyphicon-facetime-video"/> View</h2>
+					<p>TODO: ***A brief description of the browser app to render the pointcloud***</p>
+					<p>TODO: ***Add screenshot of browser app***</p>
+				</div>
+			</div>
+
+		</div>
+		<div class="container contentContainer" id="download">
+			<div class="row marginBottom">
+				<h1 class="center title">Download The App!</h1>
+				<p class="lead center">TODO: ***Add brief info about Tango app***</p>
+				<p class="center">
+				<img src="img/appstore.png" class="appstoreImage" />
+			</div>
+		</div>
+		
+			
+
 	</body>
 </html>
