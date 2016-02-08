@@ -66,8 +66,13 @@
 
 				var loader = new THREE.PLYLoader();
 				loader.load( '../../temp/ant.ply', function ( geometry ) {
-
-					var material = new THREE.MeshPhongMaterial( { color: 0x0055ff, specular: 0x111111, shininess: 200 } );
+					
+					// NOTE: Old material::Showed up as black
+					//var material = new THREE.MeshPhongMaterial( { color: 0x0055ff, specular: 0x111111, shininess: 200 } );
+					// NOTE: Metallic Surface
+					//var material = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x009900, shininess: 100, shading: THREE.FlatShading } );
+					// NOTE: Blue Surface
+					var material = new THREE.MeshBasicMaterial( { color: 0x0055ff, wireframe: true } );
 					mesh = new THREE.Mesh( geometry, material );
 
 					temp = mesh.geometry.faces;
