@@ -11745,7 +11745,7 @@ Potree.Viewer = function(domElement, args){
 
 	this.loadGUI = function(){
 		var sidebarContainer = $('#potree_sidebar_container');
-		sidebarContainer.load("../build/potree/sidebar.html");
+		sidebarContainer.load("build/potree/sidebar.html");
 		sidebarContainer.css("width", "300px");
 		sidebarContainer.css("height", "100%");
 		
@@ -11757,7 +11757,7 @@ Potree.Viewer = function(domElement, args){
 		//$('head').append( $('<link rel="stylesheet" type="text/css" />').attr('href', "../libs/jquery-ui-1.11.4/jquery-ui.css"	));
 		
 		//var elProfile = $('<div style="position: absolute; width: 100%; height: 30%; bottom: 0; display: none" >');
-		var elProfile = $('<div>').load("../build/potree/profile.html", function(){
+		var elProfile = $('<div>').load("build/potree/profile.html", function(){
 			$('#potree_render_area').append(elProfile.children());
 			scope._2dprofile = new Potree.Viewer.Profile(scope, document.getElementById("profile_draw_container"));
 		});
@@ -11932,7 +11932,7 @@ Potree.Viewer = function(domElement, args){
 		scope.renderer.domElement.tabIndex = "2222";
 		scope.renderer.domElement.addEventListener("mousedown", function(){scope.renderer.domElement.focus();});
 		
-		skybox = Potree.utils.loadSkybox("../resources/textures/skybox/");
+		skybox = Potree.utils.loadSkybox("resources/textures/skybox/");
 
 		// camera and controls
 		scope.camera.position.set(-304, 372, 318);
