@@ -98,17 +98,17 @@
 		});
 		
 		viewer.setEDLEnabled(false);
-		viewer.setPointSize(3);
+		viewer.setPointSize(2);
 		viewer.setMaterial("RGB");
 		viewer.setFOV(60);
 		viewer.setPointSizing("Fixed");
 		viewer.setQuality("Splat");
 		viewer.setPointBudget(1*1000*1000);
 		viewer.pointColorType = 3;
-		viewer.setOpacity(0.03);
+		viewer.setOpacity(0.05);
 		viewer.setMinNodeSize(100);
 
-	viewer.addPointCloud("resources/pointclouds/test_chair/cloud.js");
+	viewer.addPointCloud("resources/pointclouds/test_tv/cloud.js");
 
 	viewer.loadGUI();
 		
