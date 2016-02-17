@@ -1,6 +1,7 @@
+
 <html>
 	<head>
-		<title>My first Three.js app</title>
+		<title>Three.js Demo</title>
 		<style>
 			body { margin: 0; }
 			canvas { width: 100%; height: 100% }
@@ -34,42 +35,65 @@
 				controls.enableDamping = true;
 				controls.dampingFactor = 1.25;
 				controls.enableZoom = true;
-
-				controls.addEventListener( 'change', render );
 				
 				// Grid
 				var grid = new THREE.GridHelper(10, 1);
+				grid.setColors('blue');
 				scene.add(grid);
 				
 				// Object
 				var geometry = new THREE.BoxGeometry( 2, 2, 2 );
 				var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 				
-				// Cube
-				var cube = new THREE.Mesh( geometry, material );
-				cube.material.wireframe = true;
-				cube.position.y = 1;
-				scene.add( cube );
+				var loader = new THREE.TextureLoader();
+				loader.load('textures/textures_all.jpg', function(texture) {
+				
+					// Texture mapping for each side of cube
+					var bricks = [new THREE.Vector2(0, .666), new THREE.Vector2(.5, .666), new THREE.Vector2(.5, 1), new THREE.Vector2(0, 1)];
+					var fiber = [new THREE.Vector2(.5, .666), new THREE.Vector2(1, .666), new THREE.Vector2(1, 1), new THREE.Vector2(.5, 1)];
+					var green = [new THREE.Vector2(0, .333), new THREE.Vector2(.5, .333), new THREE.Vector2(.5, .666), new THREE.Vector2(0, .666)];
+					var grunge = [new THREE.Vector2(.5, .333), new THREE.Vector2(1, .333), new THREE.Vector2(1, .666), new THREE.Vector2(.5, .666)];
+					var stone = [new THREE.Vector2(0, 0), new THREE.Vector2(.5, 0), new THREE.Vector2(.5, .333), new THREE.Vector2(0, .333)];
+					var wood = [new THREE.Vector2(.5, 0), new THREE.Vector2(1, 0), new THREE.Vector2(1, .333), new THREE.Vector2(.5, .333)];
+					
+					geometry.faceVertexUvs[0] = [];
+					
+					geometry.faceVertexUvs[0][0] = [ bricks[0], bricks[1], bricks[3] ];
+					geometry.faceVertexUvs[0][1] = [ bricks[1], bricks[2], bricks[3] ];
+					  
+					geometry.faceVertexUvs[0][2] = [ fiber[0], fiber[1], fiber[3] ];
+					geometry.faceVertexUvs[0][3] = [ fiber[1], fiber[2], fiber[3] ];
+					  
+					geometry.faceVertexUvs[0][4] = [ green[0], green[1], green[3] ];
+					geometry.faceVertexUvs[0][5] = [ green[1], green[2], green[3] ];
+					  
+					geometry.faceVertexUvs[0][6] = [ grunge[0], grunge[1], grunge[3] ];
+					geometry.faceVertexUvs[0][7] = [ grunge[1], grunge[2], grunge[3] ];
+					  
+					geometry.faceVertexUvs[0][8] = [ stone[0], stone[1], stone[3] ];
+					geometry.faceVertexUvs[0][9] = [ stone[1], stone[2], stone[3] ];
+					  
+					geometry.faceVertexUvs[0][10] = [ wood[0], wood[1], wood[3] ];
+					geometry.faceVertexUvs[0][11] = [ wood[1], wood[2], wood[3] ];
+					
+					var material = new THREE.MeshBasicMaterial( {map: texture} );
+					
+					// Cube
+					var cube = new THREE.Mesh(geometry, material);
+					cube.position.y = 2;
+					cube.castShadow = true;
+					scene.add(cube);
+				});
+
 				
 				// Lighting
+				var ambient = new THREE.AmbientLight(0x606060);
+				scene.add(ambient);
+				
 				var light = new THREE.PointLight(0xffffff);
 				light.position.set(100,250,100);
 				scene.add(light);
 				
-/*				var render = function () {
-					requestAnimationFrame( render );
-
-					controls.update();
-					$('canvas').mousedown(function() {
-						$(this).mousemove(function(e) {
-							cube.rotation.x = e.clientY * 0.01;
-							cube.rotation.y = e.clientX * -0.01;
-						});
-					});
-
-					renderer.render(scene, camera);
-				};
-*/
 				window.addEventListener( 'resize', onWindowResize, false );
 				
 				render();
@@ -81,7 +105,6 @@
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
-				controls.handleResize();
 
 				render();
 			}
@@ -89,6 +112,8 @@
 			function animate() {
 				requestAnimationFrame( animate );
 				controls.update();
+				
+				render();
 			}
 
 			function render() {
