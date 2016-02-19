@@ -13,6 +13,9 @@
 		<script>
 		
 			var camera, controls, scene, renderer;
+            var anim = false;
+            
+            var cube, sphere, torus;
 			
 			init();
 			animate();
@@ -21,9 +24,7 @@
 				scene = new THREE.Scene();
 				
 				camera = new THREE.PerspectiveCamera(100, window.innerWidth/window.innerHeight, 0.1, 1000);
-				camera.position.x = 2;
-				camera.position.y = 3;
-				camera.position.z = 5;
+                camera.position.set(4, 5, 5);
 
 				// Renderer
 				renderer = new THREE.WebGLRenderer();
@@ -41,14 +42,15 @@
 				grid.setColors('blue');
 				scene.add(grid);
 				
-				// Object
-				var geometry = new THREE.BoxGeometry( 2, 2, 2 );
-				var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-				
+				// Objects
+                
+                // Cube
 				var loader = new THREE.TextureLoader();
 				loader.load('textures/textures_all.jpg', function(texture) {
-				
-					// Texture mapping for each side of cube
+                        
+                    var geometry = new THREE.BoxGeometry( 2, 2, 2 );
+					
+                    // Texture mapping for each side of cube
 					var bricks = [new THREE.Vector2(0, .666), new THREE.Vector2(.5, .666), new THREE.Vector2(.5, 1), new THREE.Vector2(0, 1)];
 					var fiber = [new THREE.Vector2(.5, .666), new THREE.Vector2(1, .666), new THREE.Vector2(1, 1), new THREE.Vector2(.5, 1)];
 					var green = [new THREE.Vector2(0, .333), new THREE.Vector2(.5, .333), new THREE.Vector2(.5, .666), new THREE.Vector2(0, .666)];
@@ -78,14 +80,77 @@
 					
 					var material = new THREE.MeshBasicMaterial( {map: texture} );
 					
-					// Cube
-					var cube = new THREE.Mesh(geometry, material);
-					cube.position.y = 2;
+					cube = new THREE.Mesh(geometry, material);
+                    cube.position.set(2, 2, -3);
 					cube.castShadow = true;
 					scene.add(cube);
 				});
 
-				
+                // Sphere
+                var loader = new THREE.TextureLoader();
+				loader.load('textures/wood.jpg', function(texture) {
+
+
+                    var geometry = new THREE.SphereGeometry(1, 12, 12);
+                    var material = new THREE.MeshPhongMaterial( {
+                        color: 0xffffff, 
+                        specular: 0x050505,
+                        shininess: 80,
+                        map: texture
+                    } );
+                    
+                    for (i = 0; i < geometry.faceVertexUvs[0].length; i++) {
+
+                        var uvs = geometry.faceVertexUvs[0][i];
+                        var face = geometry.faces[i];
+
+                        for ( var j = 0; j < 3; j ++ ) {
+
+                            uvs[j].x = face.vertexNormals[j].x * 0.5 + 0.5;
+                            uvs[j].y = face.vertexNormals[j].y * 0.5 + 0.5;
+
+                        }
+
+                    }
+                    
+                    sphere = new THREE.Mesh(geometry, material);
+                    sphere.position.set(-2, 2, -3);
+                    scene.add(sphere);
+                });
+                
+                // Torus
+                var loader = new THREE.TextureLoader();
+				loader.load('textures/grunge.jpg', function(texture) {
+
+
+                    var geometry = new THREE.TorusGeometry(1, 0.5, 12, 12);
+                    var material = new THREE.MeshPhongMaterial( {
+                        color: 0xffffff, 
+                        specular: 0x050505,
+                        shininess: 40,
+                        map: texture
+                    } );
+                    
+                    for (i = 0; i < geometry.faceVertexUvs[0].length; i++) {
+
+                        var uvs = geometry.faceVertexUvs[0][i];
+                        var face = geometry.faces[i];
+
+                        for ( var j = 0; j < 3; j ++ ) {
+
+                            uvs[j].x = face.vertexNormals[j].x * 0.5 + 0.5;
+                            uvs[j].y = face.vertexNormals[j].y * 0.5 + 0.5;
+
+                        }
+
+                    }
+                    
+                    torus = new THREE.Mesh(geometry, material);
+                    torus.position.set(0, 2, 2);
+                    torus.rotation.x = Math.PI / 2;
+                    scene.add(torus);
+                });
+
 				// Lighting
 				var ambient = new THREE.AmbientLight(0x606060);
 				scene.add(ambient);
@@ -112,7 +177,16 @@
 			function animate() {
 				requestAnimationFrame( animate );
 				controls.update();
-				
+                
+                if(anim) {
+                    sphere.rotation.y += Math.PI / 16;
+                    
+                    torus.rotation.x += Math.PI / 32;
+                    
+                    cube.rotation.x += Math.PI / 180;
+                    cube.rotation.y += Math.PI / 90;
+                }
+                
 				render();
 			}
 
