@@ -1,0 +1,516 @@
+
+<html>
+	<head>
+		<title>Editor</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r75/three.js"></script>
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+		<script src='https://code.jquery.com/jquery-2.2.1.min.js'></script>
+        <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+		<script src='js/OrbitControls.js'></script>
+		<script src='js/PLYLoader.js'></script>
+		
+		<style>
+			body {
+				margin: 0px;
+                overflow: hidden;
+			}
+            #tools {
+                position:   absolute;
+                background: #a6a6a6;
+                width:      30%;
+                height:     100%;
+                right:      0;
+                overflow:   auto;
+            }
+            #canvas-view {
+                width: 70%;
+                height: 100%;
+                float: left;
+            }
+            canvas {
+                background: #404040;
+            }
+            #tabs {
+                background: lightgrey;
+            }
+            .ui-tabs {
+                padding: 0px;
+            }
+            .ui-tabs .ui-tabs-nav {
+                padding: 0px;
+                background: #a6a6a6;
+                width: 100%;
+            }
+            .ui-tabs-nav li {
+                background: #a6a6a6;
+                margin: 0px;
+                padding: 0px;
+                border-radius: 0px;
+            }
+            .ui-tabs .ui-tabs-nav li.ui-tabs-active {
+                background: lightgrey;
+            }
+            .ui-corner-all {
+                border-radius: 0px;
+            }
+            .ui-widget-header {
+                border: none;
+            }
+            #tabs ul li a:focus { 
+                outline: none;
+            }
+            #full-lbl {
+                position: absolute;
+                padding: 5px;
+                color: white;
+            }
+            #front-lbl {
+                position: absolute;
+                padding: 5px;
+                bottom: 25%;
+                color: white;
+            }
+            #side-lbl {
+                position: absolute;
+                padding: 5px;
+                left: 17%;
+                bottom: 25%;
+                color: white;
+            }
+            #top-lbl {
+                position: absolute;
+                padding: 5px;
+                left: 35%;
+                bottom: 25%;
+                color: white;
+            }
+            #scene-lbl {
+                position: absolute;
+                padding: 5px;
+                left: 53%;
+                bottom: 25%;
+                color: white;
+            }
+            .spinner {
+                width: 30px;
+            }
+		</style>
+        <script>
+            $(function() {
+                $( "#tabs" ).tabs();
+                $('.geometry').hide();
+                $('#sphere-options').show();
+                $( ".spinner" ).spinner();
+                // TODO: Add spinner class
+                $('#geometry-menu').change(function() {
+                    $('.geometry').hide();
+                    $('#' + $(this).val()).show();
+                });
+                $('#create-sphere').click(function () {
+                    console.log("inside create sphere method")
+                    var radius = $('#sphere-radius').val();
+                    var width = $('#sphere-width').val();
+                    var height = $('#sphere-height').val();
+                    
+                    console.log("Radius: ", radius);
+                    console.log("Width: ", width);
+                    console.log("Height: ", height);
+                });
+                $('#create-box').click(function () {
+                    console.log("inside create box method");
+                    var width = $('#box-width').val();
+                    var height = $('#box-height').val();
+                    var depth = $('#box-depth').val();
+                    
+                    console.log("Width: ", width);
+                    console.log("Height: ", height);
+                    console.log("Depth: ", depth);
+                });
+                $('#create-cylinder').click(function () {
+                    console.log("inside create cylinder method");
+                    var radiusTop = $('#cylinder-radius-top').val();
+                    var radiusBottom = $('#cylinder-radius-bottom').val();
+                    var height = $('#cylinder-height').val();
+                    var radiusSegments = $('#cylinder-radius-segments').val();
+                    var heightSegments = $('#cylinder-height-segments').val();
+                    
+                    console.log("Radius Top: ", radiusTop);
+                    console.log("Radius Bottom: ", radiusBottom);
+                    console.log("Height: ", height);
+                    console.log("Radius Segments: ", radiusSegments);
+                    console.log("Height Segments: ", heightSegments);
+                });
+                $('#create-torus').click(function () {
+                    console.log("inside create torus method")
+                    
+                    var radius = $('#torus-radius').val();
+                    var tude = $('#torus-tube').val();
+                    var radiusSegments = $('#torus-radius-segments').val();
+                    var tubeSegments = $('#torus-tube-segments').val();
+                });
+            });
+            
+            
+        </script>
+	</head>
+	<body>
+        <div id='tools'>
+            <div id="tabs">
+                <ul>
+                    <li><a href="#tabs-1">Create</a></li>
+                    <li><a href="#tabs-2">Load</a></li>
+                    <li><a href="#tabs-3">View</a></li>
+                    <li><a href="#tabs-4">Edit</a></li>
+                </ul>
+                <div id="tabs-1">
+                    <p>Create and Object in the scene</p>
+                    <select id="geometry-menu">
+                      <option value="sphere-options">Sphere</option>
+                      <option value="box-options">Box</option>
+                      <option value="cylinder-options">Cylinder</option>
+                      <option value="torus-options">Torus</option>
+                    </select>
+                    <div id='sphere-options' class ='geometry'>Create a Sphere
+                        <form class='options'>
+                            <label for="sphere-radius">Radius:</label>
+                            <input id="sphere-radius" class='spinner' name="value">
+                            <label for="sphere-width">Width Segments:</label>
+                            <input id="sphere-width" class='spinner' name="value">
+                            <label for="sphere-height">Height Segments:</label>
+                            <input id="sphere-height" class='spinner' name="value">
+                            <input id='create-sphere' type='button' value='Create'>
+                        </form>
+                    </div>
+                    <div id='box-options' class ='geometry'>Create a Box
+                        <form class='options'>
+                            <label for="box-width">Width:</label>
+                            <input id="box-width" class='spinner' name="value">
+                            <label for="box-height">Height:</label>
+                            <input id="box-height" class='spinner' name="value">
+                            <label for="box-depth">Depth:</label>
+                            <input id="box-depth" class='spinner' name="value">
+                            <input id='create-box' type='button' value='Create'>
+                        </form>
+                    </div>
+                    <div id='cylinder-options' class ='geometry'>Create a Cylinder
+                        <form class='options'>
+                            <label for="cylinder-radius-top">Radius Top:</label>
+                            <input id="cylinder-radius-top" class='spinner' name="value">
+                            <label for="cylinder-radius-bottom">Radius Bottom:</label>
+                            <input id="cylinder-radius-bottom" class='spinner' name="value">
+                            <label for="cylinder-height">Height:</label>
+                            <input id="cylinder-height" class='spinner' name="value">
+                            <label for="cylinder-radius-segments">Radius Segments:</label>
+                            <input id="cylinder-radius-segments" class='spinner' name="value">
+                            <label for="cylinder-height-segments">Height Segments:</label>
+                            <input id="cylinder-height-segments" class='spinner' name="value">
+                            <input id='create-cylinder' type='button' value='Create'>
+                        </form>
+                    </div>
+                    <div id='torus-options' class ='geometry'>Create a Torus
+                        <form class='options'>
+                            <label for="torus-radius">Radius:</label>
+                            <input id="torus-radius" class='spinner' name="value">
+                            <label for="torus-tube">Tube:</label>
+                            <input id="torus-tube" class='spinner' name="value">
+                            <label for="torus-radius-segments">Radius Segments:</label>
+                            <input id="torus-radius-segments" class='spinner' name="value">
+                            <label for="torus-tube-segments">Tube Segments:</label>
+                            <input id="torus-tube-segments" class='spinner' name="value">
+                            <input id='create-cylinder' type='button' value='Create'>
+                        </form>
+                    </div>
+                </div>
+                <div id="tabs-2">
+                    <p>Load an object in the scene</p>
+                    <form class='loaders'>
+                        <label for="obj-file" style='margin: 0 10px 0 8px;'>Load Object File</label>
+                        <input id="obj-file" type="file"/>
+                        <input id='load-obj' type='button' value='Load'/>
+                    </form>
+                    <form class='loaders'>
+                        <label for="texture-file" style='margin-left: 10px;'>Load Texture File</label>
+                        <input id="texture-file" type="file"/>
+                        <input id='load-texture' type='button' value='Load'/>
+                    </form>
+                </div>
+                <div id="tabs-3">
+                    <p>Toggle View of objects in the scene</p>
+                </div>
+                <div id="tabs-4">
+                    <p>Edit an object in the scene</p>
+                </div>
+            </div>
+        </div>
+		<div id='canvas-view'>
+            <p id='full-lbl'>Full View</p>
+            <p id='front-lbl'>Front View</p>
+            <p id='side-lbl'>Side View</p>
+            <p id='top-lbl'>Top View</p>
+            <p id='scene-lbl'>Scene View</p>
+        </div>
+		<script>
+            var views = [
+				{//Full
+                    left: 0,
+					bottom: 0.3,
+					width: 1,
+					height: 0.7,
+					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
+					eye: [ 0.5, 5, 5.5 ],
+                    up: [0, 1, 0],
+					fov: 100
+				},
+				{//Front
+					left: 0,
+					bottom: 0,
+					width: 0.25,
+					height: 0.3,
+					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
+                    eye: [ 0, 0, 10 ],
+                    up: [0, 1, 0],
+					fov: 100
+				},
+				{//Side
+					left: 0.25,
+					bottom: 0,
+					width: 0.251,
+					height: 0.3,
+					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
+                    eye: [ 10, 0, 0 ],
+                    up: [0, 1, 0],
+                    fov: 100
+				},
+                {//Top
+					left: 0.5,
+					bottom: 0,
+					width: 0.25,
+					height: 0.3,
+					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
+                    eye: [ 0, 10, 0 ],
+                    up: [0, 0, -1],
+					fov: 100
+				},
+                {//Scene
+					left: 0.75,
+					bottom: 0,
+					width: 0.251,
+					height: 0.3,
+					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
+                    eye: [ 0, 7, 7],
+                    up: [0, 1, 0],
+                    fov: 100
+				}
+			];
+        
+		
+			var camera, controls, scene, renderer;
+            var anim = false;
+            
+            var canvasHeight, canvasWidth
+            
+            var cube, sphere, torus;
+            
+            var objects = []
+			
+			init();
+			animate();
+			
+			function init() {
+				scene = new THREE.Scene();
+				
+                container = $('#canvas-view');
+                canvasWidth = container.width();
+                canvasHeight = container.height();
+
+				// Renderer
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( canvasWidth, canvasHeight);
+                container.append(renderer.domElement);
+                
+                // Views        
+                for (var i = 0; i < views.length; i++) {
+                    view = views[i]
+                    if (i == 0) 
+                        camera = new THREE.PerspectiveCamera( view.fov, canvasWidth / canvasHeight, 0.1, 1000 );
+                    else if (i == 4)
+                        camera = new THREE.OrthographicCamera( -10, 10, 10, -6, -1000, 1000);
+                    else 
+                        camera = new THREE.OrthographicCamera( -7, 7, 7, -7, -100, 100);
+                        
+                    camera.position.x = view.eye[0];
+                    camera.position.y = view.eye[1];
+                    camera.position.z = view.eye[2];
+                    camera.up.x = view.up[0];
+                    camera.up.y = view.up[1];
+                    camera.up.z = view.up[2];
+                    view.camera = camera;
+                }
+                
+				// Controls
+                camera = views[0].camera; // Main
+                console.log(camera);
+				controls = new THREE.OrbitControls( camera, renderer.domElement );
+				controls.enableDamping = true;
+				controls.dampingFactor = 1.25;
+				controls.enableZoom = true;
+				
+				// Grid
+				var grid = new THREE.GridHelper(10, 1);
+				grid.setColors('blue');
+				scene.add(grid);
+				
+				// Objects
+				var loader = new THREE.PLYLoader();
+				loader.load('../../temp/test_chair_blender.ply', function (geometry) {
+					console.log('Point cloud loaded');
+
+                    // Scales full geometry
+                    geometry.scale(2, 2, 2);
+                    geometry.rotateY(Math.PI);
+					
+					// Localize to origin
+					geometry.computeBoundingBox();
+                    console.log(geometry.boundingBox);
+                    //var offsetX = geometry.bound
+                    var offsetX = -(geometry.boundingBox.max.x + geometry.boundingBox.min.x) / 2;
+                    var offsetY = -(geometry.boundingBox.min.y);
+                    var offsetZ = -(geometry.boundingBox.max.z + geometry.boundingBox.min.z) / 2;
+
+                    geometry.translate(offsetX, offsetY, offsetZ);
+
+                    var ymin = geometry.boundingBox.min.y;
+					var ymax = geometry.boundingBox.max.y;
+					var bRadius = geometry.boundingSphere.radius;
+					var bCenter = geometry.boundingSphere.center;
+                    
+					var yRange = ymax - ymin;
+					console.log("Range: ", yRange);
+					console.log("Y Min: ", ymin);
+					console.log("Y Max: ", ymax);
+					
+					var floorMap = [];
+					
+                    geometry.computeFaceNormals();
+					console.log(geometry);
+					
+					faces = geometry.faces;
+					for (i = 0; i < faces.length; i++) {
+						//console.log("Max Range: ", ymin + yRange/10);
+						if (faces[i].normal.y >= ymin && faces[i].normal.y < (ymin + yRange/10)) {
+							//console.log("Face Y Norm: ", faces[i].normal.y);
+							//index first y ranges array
+                            floorMap.push(faces[i]);
+						}
+					}
+                    
+                    console.log("Low index Map", floorMap);
+                    console.log("# ", floorMap.length);
+                    
+                    // RGB Pointcloud of loaded geometry
+					var material = new THREE.PointsMaterial({ vertexColors: true, size: .01 });
+					var pointcloud = new THREE.Points(geometry, material);
+                    //pointcloud.position.set(0, 0, 0);
+                    scene.add(pointcloud);
+                    
+                    var bbox = new THREE.BoundingBoxHelper( pointcloud, 0xff0000 );
+                    bbox.update();
+                    scene.add(bbox);
+                    objects.push(bbox)
+                    
+                    // Adds to global list of objects
+                    objects.push(pointcloud)
+                    
+                    // Blue wireframe of loaded geometry
+                    var material = new THREE.MeshBasicMaterial( {color: 'blue', wireframe: true, visible: false} );
+                    var wireframe = new THREE.Mesh(geometry, material);
+                    scene.add(wireframe);
+                    
+                    // Gradient on z-index of loaded geometry
+                    //var material = new THREE.MeshDepthMaterial();
+                    //var gradient = new THREE.Mesh(geometry, material);
+                    //scene.add(gradient);
+                    //objects.push(gradient)
+                    
+                    // Target Area designated by yellow wireframe sphere
+                    //var geometry = new THREE.SphereGeometry(bRadius, 16, 16);
+					//var material = new THREE.MeshBasicMaterial( {color: 'yellow', wireframe: true, transparent: true, opacity: 0.3} );
+                    
+					//var sphere = new THREE.Mesh(geometry, material);
+                    //sphere.position.set(x, y, z);
+                    //scene.add(sphere);
+
+					//bSphere.position.set(bCenter.x, bCenter.y, bCenter.z);
+					//bSphere.scale.set(.25, .25, .25);
+					//scene.add(bSphere);
+				});
+
+				// Lighting
+				var ambient = new THREE.AmbientLight(0x606060);
+				scene.add(ambient);
+				
+				var light = new THREE.PointLight(0xffffff);
+				light.position.set(100,250,100);
+				scene.add(light);
+				
+				window.addEventListener( 'resize', onWindowResize, false );
+				
+				render();
+			}
+			
+			function onWindowResize() {
+                
+                container = $('#canvas-view');
+                canvasWidth = container.width();
+                canvasHeight = container.height();
+
+				renderer.setSize( canvasWidth, canvasHeight);
+
+
+				render();
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+				controls.update();
+                
+				render();
+			}
+
+			function render() {
+            
+                for (var i = 0; i < views.length; i++) {
+                
+                    view = views[i];
+					camera = view.camera;
+                    
+                    var left   = Math.floor( canvasWidth  * view.left );
+                    var bottom = Math.floor( canvasHeight * view.bottom );
+                    var width  = Math.floor( canvasWidth  * view.width );
+                    var height = Math.floor( canvasHeight * view.height );
+                    
+                    
+                    renderer.setViewport( left, bottom, width, height );
+                    renderer.setScissor( left, bottom, width, height );
+                    renderer.setScissorTest( true );
+                    renderer.setClearColor( view.background );
+
+                    camera.lookAt(scene.position);
+                    camera.aspect = width / height;
+                    camera.updateProjectionMatrix();
+                
+                    renderer.render( scene, camera );
+                }
+                //renderer.render( scene, camera );
+
+                view = views[4];
+                camera = view.camera;
+                
+                var timer = Date.now() * 0.0001;
+				camera.position.x = Math.cos( timer ) * 10;
+				camera.position.z = Math.sin( timer ) * 10;
+				camera.lookAt( scene.position );
+			}
+		</script>
+	</body>
+</html>
