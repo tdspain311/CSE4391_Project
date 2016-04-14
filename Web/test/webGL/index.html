@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - PLY</title>
+		<title>Wireframe</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -46,8 +46,6 @@
 				controls.dampingFactor = 1.25;
 				controls.enableZoom = true;
 
-				controls.addEventListener( 'change', render );
-				
 				// Grid
 				var grid = new THREE.GridHelper(10, 1);
 				scene.add(grid);
@@ -65,7 +63,7 @@
 				// PLY file
 
 				var loader = new THREE.PLYLoader();
-				loader.load( '../../temp/ant.ply', function ( geometry ) {
+				loader.load( '../../temp/head1.ply', function ( geometry ) {
 					
 					// NOTE: Old material::Showed up as black
 					//var material = new THREE.MeshPhongMaterial( { color: 0x0055ff, specular: 0x111111, shininess: 200 } );
@@ -75,26 +73,14 @@
 					var material = new THREE.MeshBasicMaterial( { color: 0x0055ff, wireframe: true } );
 					mesh = new THREE.Mesh( geometry, material );
 
-					temp = mesh.geometry.faces;
-					//mesh.position.set( 0, - 0.25, 0 );
-					//mesh.rotation.set( 0, - Math.PI / 2, 0 );
-					mesh.scale.set( 0.1, 0.1, 0.1 );
+					//mesh.position.set( 0, 1, 0 );
+					mesh.rotation.set( - Math.PI / 2, 0, 0 );
+					mesh.scale.set( 10, 10, 10 );
 
 					mesh.castShadow = true;
 					mesh.receiveShadow = true;
 
 					scene.add( mesh );
-						
-					for (i=0; i < temp.length; i++) {
-						//console.log(temp[i]);
-						newList[i] = [temp[i].a, temp[i].b, temp[i].c];
-						
-					}
-					vertices = newList.reduce(function(a, b) {
-						return a.concat(b);
-					}, []);
-					showVerts(vertices);
-					//console.log(flattened);
 				} );
 				
 				// Lighting
@@ -124,6 +110,8 @@
 			function animate() {
 				requestAnimationFrame( animate );
 				controls.update();
+				
+				render();
 			}
 
 			function render() {

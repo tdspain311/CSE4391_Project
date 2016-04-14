@@ -1,15 +1,55 @@
 
 <html>
 	<head>
-		<title>Three.js Demo</title>
+		<title>Geometry</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
+        <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+		<script src='js/OrbitControls.js'></script>
 		<style>
-			body { margin: 0; }
-			canvas { width: 100%; height: 100% }
+			body { 
+                margin:     0; 
+            }
+            #tools {
+                position:   absolute;
+                height:     70%;
+                float:      left;
+                background: lightgrey;
+                right:      0;
+                overflow:   auto;
+            }
+            #views {
+                position:   absolute;
+                width:      100%;
+                background: lightgrey;
+                height:     30%;
+                bottom:     0;
+            }
+            #viewer {
+                width:      70%;
+                height:     70%;
+            }
 		</style>
+        <script>
+            $(function() {
+                var views = $('#views');
+                vheight = views.height();
+                
+                var tools = $('#tools');
+                tools.width(vheight);
+                
+                console.log(tools.width());
+            });
+            
+        
+        
+        </script>
 	</head>
 	<body>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
-		<script src='js/OrbitControls.js'></script>
+        <div id='tools'>
+            <p>This is going to be a big long test that wilkl probably keep going on and on and on so you better watch to see if this test is a good one or else it wont be a good one so there you have it</p>
+            <input type='button' onclick='animation()' value='Animate!'/>
+        </div>
+        <div id='viewer'></div>
 		<script>
 		
 			var camera, controls, scene, renderer;
@@ -21,6 +61,9 @@
 			animate();
 			
 			function init() {
+            
+                var canvas = document.getElementById('viewer');
+                
 				scene = new THREE.Scene();
 				
 				camera = new THREE.PerspectiveCamera(100, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -28,8 +71,8 @@
 
 				// Renderer
 				renderer = new THREE.WebGLRenderer();
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				document.body.appendChild( renderer.domElement );
+				renderer.setSize( window.innerWidth * 0.7, window.innerHeight * 0.7);
+				canvas.appendChild( renderer.domElement );
 				
 				// Controls
 				controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -193,6 +236,17 @@
 			function render() {
 				renderer.render( scene, camera );
 			}
+            
+            function animation() {
+                if (anim) {
+                    anim = false;
+                }
+                else {
+                    anim = true;
+                }
+            }
 		</script>
+
+        <div id='views'></div>
 	</body>
 </html>
