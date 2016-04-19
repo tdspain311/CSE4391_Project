@@ -2,12 +2,12 @@
 <html>
 	<head>
 		<title>Editor</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r75/three.js"></script>
+        <script src="js/three/three.js"></script>
+		<script src='js/jquery/jquery-2.2.1.min.js'></script>
+        <script src="js/jquery/jquery-ui.js"></script>
+		<script src='js/three/OrbitControls.js'></script>
+		<script src='js/three/PLYLoader.js'></script>
         <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-		<script src='https://code.jquery.com/jquery-2.2.1.min.js'></script>
-        <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-		<script src='js/OrbitControls.js'></script>
-		<script src='js/PLYLoader.js'></script>
 		
 		<style>
 			body {
@@ -94,63 +94,289 @@
             .spinner {
                 width: 30px;
             }
+            .position {
+                width: 100px;
+            }
+            .view-edit-tables td {
+                font-size: x-small;
+            }
+            .loaders {
+                font-size: small;
+            }
 		</style>
         <script>
+            // Editor Globals
+            var camera, controls, scene, renderer;
+            var canvasHeight, canvasWidth;
+            var objects = [];
+            var lights = [];
+            var loaded, wireframe, bbox;
+            
+            var grid;
+            var GRIDSIZE = 20;
+            
             $(function() {
                 $( "#tabs" ).tabs();
-                $('.geometry').hide();
-                $('#sphere-options').show();
+                $('.light').hide();
+                $('#point-options').show();
                 $( ".spinner" ).spinner();
-                // TODO: Add spinner class
-                $('#geometry-menu').change(function() {
-                    $('.geometry').hide();
+                $('.spinner-intensity').spinner({
+                    min: 0.1,
+                    max: 1,
+                    step: 0.10
+                });
+                $('.spinner-distance').spinner({
+                    min: 0,
+                    max: GRIDSIZE
+                });
+                $('#light-menu').change(function() {
+                    $('.light').hide();
                     $('#' + $(this).val()).show();
                 });
-                $('#create-sphere').click(function () {
-                    console.log("inside create sphere method")
-                    var radius = $('#sphere-radius').val();
-                    var width = $('#sphere-width').val();
-                    var height = $('#sphere-height').val();
-                    
-                    console.log("Radius: ", radius);
-                    console.log("Width: ", width);
-                    console.log("Height: ", height);
+                $('.position').slider({
+                    value: 0,
+                    orientation: 'horizontal',
+                    min: -GRIDSIZE,
+                    max: GRIDSIZE,
+                    animate: true
                 });
-                $('#create-box').click(function () {
-                    console.log("inside create box method");
-                    var width = $('#box-width').val();
-                    var height = $('#box-height').val();
-                    var depth = $('#box-depth').val();
+                
+                $('#create-point').click(function () {
+                    console.log("inside create point light method");
+                    var color = $('#point-color').val();
+                    var intensity = $('#point-intensity').val();
+                    var distance = $('#point-distance').val();
+                    var x = $('#point-posx').slider('value');
+                    var y = $('#point-posy').slider('value');
+                    var z = $('#point-posz').slider('value');
                     
-                    console.log("Width: ", width);
-                    console.log("Height: ", height);
-                    console.log("Depth: ", depth);
+                    var light = new THREE.PointLight(color, intensity, distance);
+                    light.position.set(x, y, z);
+                    
+                    lights.push(light);
+                    addToEditor(light);
                 });
-                $('#create-cylinder').click(function () {
-                    console.log("inside create cylinder method");
-                    var radiusTop = $('#cylinder-radius-top').val();
-                    var radiusBottom = $('#cylinder-radius-bottom').val();
-                    var height = $('#cylinder-height').val();
-                    var radiusSegments = $('#cylinder-radius-segments').val();
-                    var heightSegments = $('#cylinder-height-segments').val();
+                $('#create-directional').click(function () {
+                    console.log("inside create directional light method");
+                    var color = $('#directional-color').val();
+                    var intensity = $('#directional-intensity').val();
+                    var x = $('#directional-posx').slider('value');
+                    var y = $('#directional-posy').slider('value');
+                    var z = $('#directional-posz').slider('value');
                     
-                    console.log("Radius Top: ", radiusTop);
-                    console.log("Radius Bottom: ", radiusBottom);
-                    console.log("Height: ", height);
-                    console.log("Radius Segments: ", radiusSegments);
-                    console.log("Height Segments: ", heightSegments);
+                    var light = new THREE.DirectionalLight(color, intensity);
+                    light.position.set(x, y, z);
+                    
+                    lights.push(light);
+                    addToEditor(light);
                 });
-                $('#create-torus').click(function () {
-                    console.log("inside create torus method")
+                $('#create-ambient').click(function () {
+                    console.log("inside create ambient light method");
+                    var color = $('#ambient-color').val();
+                    var x = $('#ambient-posx').slider('value');
+                    var y = $('#ambient-posy').slider('value');
+                    var z = $('#ambient-posz').slider('value');
                     
-                    var radius = $('#torus-radius').val();
-                    var tude = $('#torus-tube').val();
-                    var radiusSegments = $('#torus-radius-segments').val();
-                    var tubeSegments = $('#torus-tube-segments').val();
+                    var light = new THREE.AmbientLight(color);
+                    light.position.set(x, y, z);
+                    
+                    lights.push(light);
+                    addToEditor(light);
+                });
+                $('#load-obj').click(function() {
+                    var file = $('#obj-file')[0].files[0];
+                    
+                    if (file != undefined) {
+                        var filename = file.name;
+                        var extension = filename.split( '.' ).pop().toLowerCase();
+
+                        var reader = new FileReader();
+                        reader.addEventListener( 'progress', function ( event ) {
+
+                            var size = '(' + Math.floor( event.total / 1000 ) + ' KB)';
+                            var progress = Math.floor( ( event.loaded / event.total ) * 100 ) + '%';
+                            console.log( 'Loading', filename, size, progress );
+
+                        } );
+                        switch ( extension ) {
+                            case 'ply':
+                                reader.addEventListener( 'load', function ( event ) {
+                                
+                                    if (loaded != undefined) {
+                                        scene.remove(loaded);
+                                    }
+
+                                    var contents = event.target.result;
+
+                                    var geometry = new THREE.PLYLoader().parse( contents );
+                                    geometry.sourceType = "ply";
+                                    geometry.sourceFile = file.name;
+                                    
+                                    // Localize to origin
+                                    geometry.computeBoundingBox();
+                                    var offsetX = -(geometry.boundingBox.max.x + geometry.boundingBox.min.x) / 2;
+                                    var offsetY = -(geometry.boundingBox.min.y);
+                                    var offsetZ = -(geometry.boundingBox.max.z + geometry.boundingBox.min.z) / 2;
+                                    geometry.translate(offsetX, offsetY, offsetZ);
+
+                                    // Scale to reflect uniform size
+                                    var min = (geometry.boundingBox.min.x + geometry.boundingBox.min.z) / 2;
+                                    var max = (geometry.boundingBox.max.x + geometry.boundingBox.max.z) / 2;
+                                    var scale = GRIDSIZE / (max - min);
+                                    geometry.scale(scale, scale, scale);
+
+                                    var material = new THREE.PointsMaterial({ vertexColors: true, size: .01});
+                                    var pointcloud = new THREE.Points(geometry, material);
+                                    pointcloud.castShadow = true;
+                                    pointcloud.name = filename;
+                                    
+                                    // Add wireframe
+                                    wireframe = new THREE.WireframeHelper(pointcloud, 0x00ff40);
+                                    wireframe.visible = false;
+                                    
+                                    // Add boundingbox
+                                    bbox = new THREE.BoundingBoxHelper(pointcloud, 0xff0000);
+                                    bbox.update();
+                                    bbox.visible = false;
+                                    
+                                    // Placeholder for loaded model to be removed
+                                    loaded = pointcloud;
+                                    
+                                    addToEditor(pointcloud);
+                                    addToEditor(wireframe);
+                                    addToEditor(bbox);                                    
+                                }, false );
+                                reader.readAsText( file );
+
+                                break;
+                            default:
+                                console.log("unsupported file format");
+                                break;
+                        }
+                    }
                 });
             });
             
+            function addToEditor(object) {
+                
+                // Update scene objects
+                scene.add(object);
+                
+                pointcloudViewEdit();
+                
+                lightsViewEdit();                
+            }
             
+            function removeFromEditor(object) {
+                console.log("Remove from editor method");
+                
+                scene.remove(object);
+            }
+            
+            function pointcloudViewEdit() {
+                // Update Views and Edit Tab
+                if (loaded != undefined) {
+                    // Clear table
+                    var view = $('#pointcloud-view-table');
+                    var edit = $('#pointcloud-edit-table');
+                    
+                    view.html('');
+                    edit.html('');
+
+                    // Set up view options buttons
+                    var viewOptions = "<div class='view-tab-options'><input type='checkbox' id='visible-pointcloud' checked><label for='visible-pointcloud'>Visible</label><input type='checkbox' id='wireframe-pointcloud'><label for='wireframe-pointcloud'>Wireframe</label><input type='checkbox' id='boundingBox-pointcloud'><label for='boundingBox-pointcloud'>Bounding Box</label></div>";
+                    var row = "<tr><td>" + loaded.name + "</td>" + "<td>" + viewOptions + "</td></tr>";
+                    view.append(row);
+                    $('#visible-pointcloud').change(function(event) {                        
+                        if(event.target.checked) 
+                            loaded.material.visible = true;
+                        else
+                            loaded.material.visible = false;
+                    });
+                    $('#wireframe-pointcloud').change(function(event) {                        
+                        if(event.target.checked) {
+                            loaded.material.visible = false;
+                            wireframe.visible = true;
+                        }
+                        else {
+                            wireframe.visible = false;
+                            loaded.material.visible = true;
+                        }
+                    });
+                    $('#boundingBox-pointcloud').change(function(event) {
+                        if(event.target.checked)
+                            bbox.visible = true;
+                        else
+                            bbox.visible = false;
+                    });
+                    
+                    // Create new row with loaded pointcloud and remove button
+                    var editOptions = "<input type='button' id='remove-pointcloud' value='Remove'>";
+                    var row = "<tr><td>" + loaded.name + "</td><td>" + editOptions + "</td></tr>";
+                    edit.append(row);
+                    $('#remove-pointcloud').click(function() {
+                        $('#pointcloud-view-table').html('');
+                        $('#pointcloud-edit-table').html('');
+                        removeFromEditor(loaded);
+                        removeFromEditor(wireframe);
+                        removeFromEditor(bbox);
+                    });
+                }
+            }
+            
+            function lightsViewEdit() {
+                // Populate list in view and edit for Lights
+                if (lights != undefined) {
+                    view = $('#scene-view-table');
+                    edit = $('#scene-edit-table');
+                    
+                    view.html('');
+                    edit.html('');
+                    
+                    view.append("<table id='light-scene-table'>");
+                    // For adding grid
+                    view.append("<tr><td>" + grid.name + "</td><td><div class='view-tab-options'><input type='checkbox' id='visible-grid' checked><label for='visible-grid'>Visible</label></div></td></tr>");
+                    $('#visible-grid').change(function(event) {
+                        if(event.target.checked)
+                            grid.visible = true;
+                        else
+                            grid.visible = false;
+                    });
+                    
+                    // Lights view updates
+                    for (var i = 0; i < lights.length; i++) {
+                        var viewOptions = "<div class='view-tab-options'><input type='checkbox' id='visible-light" + i + "' checked><label for='visible-light" + i + "' >Visible</label></div>";
+                        var row = "<tr><td>" + lights[i].type + i + "</td><td>" + viewOptions + "</td></tr>";
+                        view.append(row);
+                        $('#visible-light' + i).change(function(event) {
+                            var index = this.id.replace( /^\D+/g, '');
+                            if(event.target.checked)
+                                lights[index].visible = true;
+                            else
+                                lights[index].visible = false;
+                        });
+                    }
+                    view.append("</table>");
+                    
+                    edit.append("<table id='light-edit-table'>");
+                    
+                    // Lights edit updates
+                    for (var i = 0; i < lights.length; i++) {
+                        var editOptions = "<input type='button' id='remove-light" + i + "' value='Remove'>";
+                        var row = "<tr><td>" + lights[i].type + i + "</td><td>" + editOptions + "</td></tr>";
+                        edit.append(row);
+                        $('#remove-light' + i).click(function() {
+                            var index = this.id.replace( /^\D+/g, '');
+                            
+                            removeFromEditor(lights[index]);
+                            lights.pop(index);
+                            lightsViewEdit();
+                        });
+                    }
+                    edit.append("</table>");
+                }
+                $('.view-tab-options').buttonset();
+            }
         </script>
 	</head>
 	<body>
@@ -163,61 +389,100 @@
                     <li><a href="#tabs-4">Edit</a></li>
                 </ul>
                 <div id="tabs-1">
-                    <p>Create and Object in the scene</p>
-                    <select id="geometry-menu">
-                      <option value="sphere-options">Sphere</option>
-                      <option value="box-options">Box</option>
-                      <option value="cylinder-options">Cylinder</option>
-                      <option value="torus-options">Torus</option>
+                    <p>Create lighting objects in the scene</p>
+                    <select id="light-menu">
+                      <option value="point-options">Point</option>
+                      <option value="directional-options">Directional</option>
+                      <option value="ambient-options">Ambient</option>
                     </select>
-                    <div id='sphere-options' class ='geometry'>Create a Sphere
+                    <div id='point-options' class ='light'>
                         <form class='options'>
-                            <label for="sphere-radius">Radius:</label>
-                            <input id="sphere-radius" class='spinner' name="value">
-                            <label for="sphere-width">Width Segments:</label>
-                            <input id="sphere-width" class='spinner' name="value">
-                            <label for="sphere-height">Height Segments:</label>
-                            <input id="sphere-height" class='spinner' name="value">
-                            <input id='create-sphere' type='button' value='Create'>
+                            <table>
+                                <tr>
+                                    <th colspan=4>Create a Point Light</td>
+                                </tr>
+                                <tr>
+                                    <td><label for='point-color'>Color:</label></td>
+                                    <td><input id='point-color' type='color' name='value' value='#ffffff'></td>
+                                    <td><label for='point-posx'>Position X:</label></td>
+                                    <td><div id='point-posx' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td><label for='point-intensity'>Intensity:</label></td>
+                                    <td><input id='point-intensity' class='spinner spinner-intensity' name='value'></td>
+                                    <td><label for='point-posy'>Position Y:</label></td>
+                                    <td><div id='point-posy' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td><label for='point-distance'>Distance:</label></td>
+                                    <td><input id='point-distance' class='spinner spinner-distance' name='value'></td>
+                                    <td><label for='point-posz'>Position Z:</label></td>
+                                    <td><div id='point-posz' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td><input id='create-point' type='button' value='Create'></td>
+                                </tr>
+                            </table>
                         </form>
                     </div>
-                    <div id='box-options' class ='geometry'>Create a Box
+                    <div id='directional-options' class ='light'>
                         <form class='options'>
-                            <label for="box-width">Width:</label>
-                            <input id="box-width" class='spinner' name="value">
-                            <label for="box-height">Height:</label>
-                            <input id="box-height" class='spinner' name="value">
-                            <label for="box-depth">Depth:</label>
-                            <input id="box-depth" class='spinner' name="value">
-                            <input id='create-box' type='button' value='Create'>
+                            <table>
+                                <tr>
+                                    <th colspan=4>Create a Directional Light</td>
+                                </tr>
+                                <tr>
+                                    <td><label for='directional-color'>Color:</label></td>
+                                    <td><input id='directional-color' type='color' name='value' value='#ffffff'></td>
+                                    <td><label for='directional-posx'>Position X:</label></td>
+                                    <td><div id='directional-posx' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td><label for='directional-intensity'>Intensity:</label></td>
+                                    <td><input id='directional-intensity' class='spinner spinner-intensity' name='value'></td>
+                                    <td><label for='directional-posy'>Position Y:</label></td>
+                                    <td><div id='directional-posy' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td><label for='directional-posz'>Position Z:</label></td>
+                                    <td><div id='directional-posz' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td><input id='create-directional' type='button' value='Create'></td>
+                                </tr>
+                            </table>
                         </form>
                     </div>
-                    <div id='cylinder-options' class ='geometry'>Create a Cylinder
+                    <div id='ambient-options' class ='light'>
                         <form class='options'>
-                            <label for="cylinder-radius-top">Radius Top:</label>
-                            <input id="cylinder-radius-top" class='spinner' name="value">
-                            <label for="cylinder-radius-bottom">Radius Bottom:</label>
-                            <input id="cylinder-radius-bottom" class='spinner' name="value">
-                            <label for="cylinder-height">Height:</label>
-                            <input id="cylinder-height" class='spinner' name="value">
-                            <label for="cylinder-radius-segments">Radius Segments:</label>
-                            <input id="cylinder-radius-segments" class='spinner' name="value">
-                            <label for="cylinder-height-segments">Height Segments:</label>
-                            <input id="cylinder-height-segments" class='spinner' name="value">
-                            <input id='create-cylinder' type='button' value='Create'>
-                        </form>
-                    </div>
-                    <div id='torus-options' class ='geometry'>Create a Torus
-                        <form class='options'>
-                            <label for="torus-radius">Radius:</label>
-                            <input id="torus-radius" class='spinner' name="value">
-                            <label for="torus-tube">Tube:</label>
-                            <input id="torus-tube" class='spinner' name="value">
-                            <label for="torus-radius-segments">Radius Segments:</label>
-                            <input id="torus-radius-segments" class='spinner' name="value">
-                            <label for="torus-tube-segments">Tube Segments:</label>
-                            <input id="torus-tube-segments" class='spinner' name="value">
-                            <input id='create-cylinder' type='button' value='Create'>
+                            <table>
+                                <tr>
+                                    <th colspan=4>Create Ambient Light</td>
+                                </tr>
+                                <tr>
+                                    <td><label for='ambient-color'>Color:</label></td>
+                                    <td><input id='ambient-color' type='color' name='value' value='#ffffff'></td>
+                                    <td><label for='ambient-posx'>Position X:</label></td>
+                                    <td><div id='ambient-posx' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td><label for='ambient-posy'>Position Y:</label></td>
+                                    <td><div id='ambient-posy' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td><label for='ambient-posz'>Position Z:</label></td>
+                                    <td><div id='ambient-posz' class='position'></div></td>
+                                </tr>
+                                <tr>
+                                    <td><input id='create-ambient' type='button' value='Create'></td>
+                                </tr>
+                            </table>
                         </form>
                     </div>
                 </div>
@@ -236,9 +501,29 @@
                 </div>
                 <div id="tabs-3">
                     <p>Toggle View of objects in the scene</p>
+                    <div id='pointcloud-view'>
+                        <h3>Pointcloud</h3>
+                        <table id='pointcloud-view-table' class='view-edit-tables'>
+                        </table>
+                    </div>
+                    <div id='scene-view'>
+                        <h3>Scene Objects</h3>
+                        <table id='scene-view-table' class='view-edit-tables'>
+                        </table>
+                    </div>
                 </div>
                 <div id="tabs-4">
                     <p>Edit an object in the scene</p>
+                    <div id='pointcloud-edit'>
+                        <h3>Pointcloud</h3>
+                        <table id='pointcloud-edit-table' class='view-edit-tables'>
+                        </table>
+                    </div>
+                    <div id='scene-edit'>
+                        <h3>Scene Objects</h3>
+                        <table id='scene-edit-table' class='view-edit-tables'>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -257,9 +542,9 @@
 					width: 1,
 					height: 0.7,
 					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
-					eye: [ 0.5, 5, 5.5 ],
+					eye: [GRIDSIZE / 3, GRIDSIZE / 2, GRIDSIZE],
                     up: [0, 1, 0],
-					fov: 100
+                    camera: new THREE.PerspectiveCamera(100, canvasWidth / canvasHeight, 0.1, 1000 )
 				},
 				{//Front
 					left: 0,
@@ -267,9 +552,9 @@
 					width: 0.25,
 					height: 0.3,
 					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
-                    eye: [ 0, 0, 10 ],
+                    eye: [ 0, 0, GRIDSIZE],
                     up: [0, 1, 0],
-					fov: 100
+                    camera: new THREE.OrthographicCamera( -(3 * GRIDSIZE / 4), 3 * GRIDSIZE / 4, 3 * GRIDSIZE / 4, -(3 * GRIDSIZE / 4), -1000, 1000)
 				},
 				{//Side
 					left: 0.25,
@@ -277,9 +562,9 @@
 					width: 0.251,
 					height: 0.3,
 					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
-                    eye: [ 10, 0, 0 ],
+                    eye: [GRIDSIZE, 0, 0 ],
                     up: [0, 1, 0],
-                    fov: 100
+                    camera: new THREE.OrthographicCamera( -(3 * GRIDSIZE / 4), 3 * GRIDSIZE / 4, 3 * GRIDSIZE / 4, -(3 * GRIDSIZE / 4), -1000, 1000)
 				},
                 {//Top
 					left: 0.5,
@@ -287,9 +572,9 @@
 					width: 0.25,
 					height: 0.3,
 					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
-                    eye: [ 0, 10, 0 ],
+                    eye: [ 0, GRIDSIZE, 0 ],
                     up: [0, 0, -1],
-					fov: 100
+                    camera: new THREE.OrthographicCamera( -(3 * GRIDSIZE / 4), 3 * GRIDSIZE / 4, 3 * GRIDSIZE / 4, -(3 * GRIDSIZE / 4), -1000, 1000)
 				},
                 {//Scene
 					left: 0.75,
@@ -297,21 +582,14 @@
 					width: 0.251,
 					height: 0.3,
 					background: new THREE.Color().setRGB(0.3, 0.3, 0.3),
-                    eye: [ 0, 7, 7],
+                    eye: [0, 3 * GRIDSIZE / 4, 3 * GRIDSIZE / 4],
                     up: [0, 1, 0],
-                    fov: 100
+                    camera: new THREE.OrthographicCamera( -GRIDSIZE, GRIDSIZE, GRIDSIZE, -GRIDSIZE, -1000, 1000)
 				}
 			];
         
 		
-			var camera, controls, scene, renderer;
-            var anim = false;
-            
-            var canvasHeight, canvasWidth
-            
-            var cube, sphere, torus;
-            
-            var objects = []
+
 			
 			init();
 			animate();
@@ -330,14 +608,9 @@
                 
                 // Views        
                 for (var i = 0; i < views.length; i++) {
-                    view = views[i]
-                    if (i == 0) 
-                        camera = new THREE.PerspectiveCamera( view.fov, canvasWidth / canvasHeight, 0.1, 1000 );
-                    else if (i == 4)
-                        camera = new THREE.OrthographicCamera( -10, 10, 10, -6, -1000, 1000);
-                    else 
-                        camera = new THREE.OrthographicCamera( -7, 7, 7, -7, -100, 100);
-                        
+                    view = views[i];
+                    camera = views[i].camera;
+
                     camera.position.x = view.eye[0];
                     camera.position.y = view.eye[1];
                     camera.position.z = view.eye[2];
@@ -349,109 +622,21 @@
                 
 				// Controls
                 camera = views[0].camera; // Main
-                console.log(camera);
 				controls = new THREE.OrbitControls( camera, renderer.domElement );
 				controls.enableDamping = true;
 				controls.dampingFactor = 1.25;
 				controls.enableZoom = true;
 				
 				// Grid
-				var grid = new THREE.GridHelper(10, 1);
+				grid = new THREE.GridHelper(GRIDSIZE, 1);
 				grid.setColors('blue');
-				scene.add(grid);
-				
-				// Objects
-				var loader = new THREE.PLYLoader();
-				loader.load('../../temp/test_chair_blender.ply', function (geometry) {
-					console.log('Point cloud loaded');
-
-                    // Scales full geometry
-                    geometry.scale(2, 2, 2);
-                    geometry.rotateY(Math.PI);
-					
-					// Localize to origin
-					geometry.computeBoundingBox();
-                    console.log(geometry.boundingBox);
-                    //var offsetX = geometry.bound
-                    var offsetX = -(geometry.boundingBox.max.x + geometry.boundingBox.min.x) / 2;
-                    var offsetY = -(geometry.boundingBox.min.y);
-                    var offsetZ = -(geometry.boundingBox.max.z + geometry.boundingBox.min.z) / 2;
-
-                    geometry.translate(offsetX, offsetY, offsetZ);
-
-                    var ymin = geometry.boundingBox.min.y;
-					var ymax = geometry.boundingBox.max.y;
-					var bRadius = geometry.boundingSphere.radius;
-					var bCenter = geometry.boundingSphere.center;
-                    
-					var yRange = ymax - ymin;
-					console.log("Range: ", yRange);
-					console.log("Y Min: ", ymin);
-					console.log("Y Max: ", ymax);
-					
-					var floorMap = [];
-					
-                    geometry.computeFaceNormals();
-					console.log(geometry);
-					
-					faces = geometry.faces;
-					for (i = 0; i < faces.length; i++) {
-						//console.log("Max Range: ", ymin + yRange/10);
-						if (faces[i].normal.y >= ymin && faces[i].normal.y < (ymin + yRange/10)) {
-							//console.log("Face Y Norm: ", faces[i].normal.y);
-							//index first y ranges array
-                            floorMap.push(faces[i]);
-						}
-					}
-                    
-                    console.log("Low index Map", floorMap);
-                    console.log("# ", floorMap.length);
-                    
-                    // RGB Pointcloud of loaded geometry
-					var material = new THREE.PointsMaterial({ vertexColors: true, size: .01 });
-					var pointcloud = new THREE.Points(geometry, material);
-                    //pointcloud.position.set(0, 0, 0);
-                    scene.add(pointcloud);
-                    
-                    var bbox = new THREE.BoundingBoxHelper( pointcloud, 0xff0000 );
-                    bbox.update();
-                    scene.add(bbox);
-                    objects.push(bbox)
-                    
-                    // Adds to global list of objects
-                    objects.push(pointcloud)
-                    
-                    // Blue wireframe of loaded geometry
-                    var material = new THREE.MeshBasicMaterial( {color: 'blue', wireframe: true, visible: false} );
-                    var wireframe = new THREE.Mesh(geometry, material);
-                    scene.add(wireframe);
-                    
-                    // Gradient on z-index of loaded geometry
-                    //var material = new THREE.MeshDepthMaterial();
-                    //var gradient = new THREE.Mesh(geometry, material);
-                    //scene.add(gradient);
-                    //objects.push(gradient)
-                    
-                    // Target Area designated by yellow wireframe sphere
-                    //var geometry = new THREE.SphereGeometry(bRadius, 16, 16);
-					//var material = new THREE.MeshBasicMaterial( {color: 'yellow', wireframe: true, transparent: true, opacity: 0.3} );
-                    
-					//var sphere = new THREE.Mesh(geometry, material);
-                    //sphere.position.set(x, y, z);
-                    //scene.add(sphere);
-
-					//bSphere.position.set(bCenter.x, bCenter.y, bCenter.z);
-					//bSphere.scale.set(.25, .25, .25);
-					//scene.add(bSphere);
-				});
+                grid.name = "Grid";
+				scene.add(grid);				
 
 				// Lighting
 				var ambient = new THREE.AmbientLight(0x606060);
-				scene.add(ambient);
-				
-				var light = new THREE.PointLight(0xffffff);
-				light.position.set(100,250,100);
-				scene.add(light);
+                lights.push(ambient);
+                addToEditor(ambient);
 				
 				window.addEventListener( 'resize', onWindowResize, false );
 				
@@ -501,14 +686,13 @@
                 
                     renderer.render( scene, camera );
                 }
-                //renderer.render( scene, camera );
 
                 view = views[4];
                 camera = view.camera;
                 
                 var timer = Date.now() * 0.0001;
-				camera.position.x = Math.cos( timer ) * 10;
-				camera.position.z = Math.sin( timer ) * 10;
+				camera.position.x = Math.cos( timer ) * GRIDSIZE;
+				camera.position.z = Math.sin( timer ) * GRIDSIZE;
 				camera.lookAt( scene.position );
 			}
 		</script>
