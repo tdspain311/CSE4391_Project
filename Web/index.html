@@ -220,18 +220,26 @@
                                     geometry.translate(offsetX, offsetY, offsetZ);
 
                                     // Scale to reflect uniform size
-                                    var min = (geometry.boundingBox.min.x + geometry.boundingBox.min.z) / 2;
-                                    var max = (geometry.boundingBox.max.x + geometry.boundingBox.max.z) / 2;
+                                    var min = Math.min(geometry.boundingBox.min.x, geometry.boundingBox.min.y, geometry.boundingBox.min.z);
+                                    var max = Math.max(geometry.boundingBox.max.x, geometry.boundingBox.max.y, geometry.boundingBox.max.z);
                                     var scale = GRIDSIZE / (max - min);
                                     geometry.scale(scale, scale, scale);
 
-                                    var material = new THREE.PointsMaterial({ vertexColors: true, size: .01});
-                                    var pointcloud = new THREE.Points(geometry, material);
+                                    geometry.computeFaceNormals();
+                                    geometry.computeVertexNormals();
+                                    if (geometry.useColor) {
+                                        var material = new THREE.PointsMaterial({ vertexColors: true, size: .01});
+                                        var pointcloud = new THREE.Points(geometry, material);
+                                    }
+                                    else {
+                                        var material = new THREE.MeshPhongMaterial({color: 0x00ace6, specular: 0x009900, shininess: 70});
+                                        var pointcloud = new THREE.Mesh(geometry, material);
+                                    }
                                     pointcloud.castShadow = true;
                                     pointcloud.name = filename;
                                     
                                     // Add wireframe
-                                    wireframe = new THREE.WireframeHelper(pointcloud, 0x00ff40);
+                                    wireframe = new THREE.WireframeHelper(pointcloud, 0x0000ff);
                                     wireframe.visible = false;
                                     
                                     // Add boundingbox
