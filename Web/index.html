@@ -1,13 +1,13 @@
 
 <html>
 	<head>
-		<title>Editor</title>
+		<title>Viewer</title>
         <script src="js/three/three.js"></script>
 		<script src='js/jquery/jquery-2.2.1.min.js'></script>
         <script src="js/jquery/jquery-ui.js"></script>
 		<script src='js/three/OrbitControls.js'></script>
 		<script src='js/three/PLYLoader.js'></script>
-        <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <link rel="stylesheet" href="css/jquery-ui.css">
 		
 		<style>
 			body {
@@ -110,24 +110,59 @@
             var canvasHeight, canvasWidth;
             var objects = [];
             var lights = [];
-            var loaded, wireframe, bbox;
+            var loaded, wireframe, bbox, pivot;
             
             var grid;
             var GRIDSIZE = 20;
             
             $(function() {
+                var ambient = lights[0];
+                var point = lights[1];
+                var directional = lights[2];
+                
+                //Update UI values for lighting
+                $('#ambient-color').val('#' + ambient.color.getHex().toString(16));
+                $('#point-color').val('#' + point.color.getHex().toString(16));
+                $('#directional-color').val('#' + directional.color.getHex().toString(16));
+                
+                $('#point-intensity').val(point.intensity);
+                $('#directional-intensity').val(directional.intensity);
+                
+                $('#point-distance').val(point.distance);
+                
                 $( "#tabs" ).tabs();
                 $('.light').hide();
-                $('#point-options').show();
+                $('#point').show();
                 $( ".spinner" ).spinner();
                 $('.spinner-intensity').spinner({
                     min: 0.1,
                     max: 1,
-                    step: 0.10
+                    step: 0.10,
+                    spin: function(event, ui) {
+                        lightType = $('#light-menu').val();
+                        if (lightType == 'point') {
+                            var intensity = $('#point-intensity').val();
+                            
+                            point.intensity = intensity;
+                        }
+                        else if (lightType == 'directional') {
+                            var intensity = $('#directional-intensity').val();
+                            
+                            directional.intensity = intensity;
+                        }
+                    }
                 });
                 $('.spinner-distance').spinner({
                     min: 0,
-                    max: GRIDSIZE
+                    max: GRIDSIZE,
+                    spin: function(event, ui) {
+                        lightType = $('#light-menu').val();
+                        if (lightType == 'point') {
+                            var distance = $('point-distance').val();
+                            
+                            point.distance = distance;
+                        }
+                    }
                 });
                 $('#light-menu').change(function() {
                     $('.light').hide();
@@ -138,51 +173,112 @@
                     orientation: 'horizontal',
                     min: -GRIDSIZE,
                     max: GRIDSIZE,
-                    animate: true
+                    animate: true,
+                    slide: function(event, ui) {
+                        lightType = $('#light-menu').val();
+                        if (lightType == 'ambient') {
+                            var x = $('#ambient-posx').slider('value');
+                            var y = $('#ambient-posy').slider('value');
+                            var z = $('#ambient-posz').slider('value');
+                    
+                            ambient.position.set(x, y, z);
+                        }
+                        else if (lightType == 'point') {
+                            var x = $('#point-posx').slider('value');
+                            var y = $('#point-posy').slider('value');
+                            var z = $('#point-posz').slider('value');
+                            
+                            point.position.set(x, y, z);
+                        }
+                        else if (lightType == 'directional') {
+                            var x = $('#directional-posx').slider('value');
+                            var y = $('#directional-posy').slider('value');
+                            var z = $('#directional-posz').slider('value');
+                            
+                            directional.position.set(x, y, z);
+                        }
+                    }
+                });
+                $('#point-color').change(function() {
+                    var color = $('#point-color').val();
+                    point.color.set(color);
                 });
                 
-                $('#create-point').click(function () {
-                    console.log("inside create point light method");
-                    var color = $('#point-color').val();
-                    var intensity = $('#point-intensity').val();
-                    var distance = $('#point-distance').val();
-                    var x = $('#point-posx').slider('value');
-                    var y = $('#point-posy').slider('value');
-                    var z = $('#point-posz').slider('value');
-                    
-                    var light = new THREE.PointLight(color, intensity, distance);
-                    light.position.set(x, y, z);
-                    
-                    lights.push(light);
-                    addToEditor(light);
-                });
-                $('#create-directional').click(function () {
-                    console.log("inside create directional light method");
-                    var color = $('#directional-color').val();
-                    var intensity = $('#directional-intensity').val();
-                    var x = $('#directional-posx').slider('value');
-                    var y = $('#directional-posy').slider('value');
-                    var z = $('#directional-posz').slider('value');
-                    
-                    var light = new THREE.DirectionalLight(color, intensity);
-                    light.position.set(x, y, z);
-                    
-                    lights.push(light);
-                    addToEditor(light);
-                });
-                $('#create-ambient').click(function () {
-                    console.log("inside create ambient light method");
+                $('#ambient-color').change(function() {
                     var color = $('#ambient-color').val();
-                    var x = $('#ambient-posx').slider('value');
-                    var y = $('#ambient-posy').slider('value');
-                    var z = $('#ambient-posz').slider('value');
-                    
-                    var light = new THREE.AmbientLight(color);
-                    light.position.set(x, y, z);
-                    
-                    lights.push(light);
-                    addToEditor(light);
+                    ambient.color.set(color);
                 });
+                
+                $('#directional-color').change(function() {
+                    var color = $('#directional-color').val();
+                    directional.color.set(color);
+                });
+                
+                $('#load-samples a').click(function(event) {
+                    if (event.target.innerHTML == "Ant")
+                        var file = "ant.ply";
+                    else if (event.target.innerHTML == "Teapot")
+                        var file = "teapot.ply";
+                    else if (event.target.innerHTML == "Jet")
+                        var file = "f16.ply";
+                    else if (event.target.innerHTML == "Cube")
+                        var file = "cube.ply";
+                    else if (event.target.innerHTML == "Pickup")
+                        var file = "pickup.ply";
+                    else if (event.target.innerHTML == "Airplane")
+                        var file = "airplane.ply";
+                    
+                    if (file != undefined) {
+                        var loader = new THREE.PLYLoader();
+                        loader.load('./temp/samples/' + file, function (geometry) {
+                        
+                            if (loaded != undefined) {
+                                scene.remove(loaded);
+                                scene.remove(wireframe);
+                                scene.remove(bbox);
+                            }
+                        
+                            // Localize to origin
+                            geometry.computeBoundingBox();
+                            var offsetX = -(geometry.boundingBox.max.x + geometry.boundingBox.min.x) / 2;
+                            var offsetY = -(geometry.boundingBox.min.y);
+                            var offsetZ = -(geometry.boundingBox.max.z + geometry.boundingBox.min.z) / 2;
+                            geometry.translate(offsetX, offsetY, offsetZ);
+
+                            // Scale to reflect uniform size
+                            var min = Math.min(geometry.boundingBox.min.x, geometry.boundingBox.min.y, geometry.boundingBox.min.z);
+                            var max = Math.max(geometry.boundingBox.max.x, geometry.boundingBox.max.y, geometry.boundingBox.max.z);
+                            var scale = GRIDSIZE / (max - min);
+                            geometry.scale(scale, scale, scale);
+
+                            geometry.computeFaceNormals();
+                            geometry.computeVertexNormals();
+                            
+                            var material = new THREE.MeshPhongMaterial({color: 0xd9d9d9, shininess: 30});
+                            var object = new THREE.Mesh(geometry, material);
+                            
+                            object.castShadow = true;
+                            object.name = file;
+                            
+                            // Add wireframe
+                            wireframe = new THREE.WireframeHelper(object, 0x0000ff);
+                            wireframe.visible = false;
+                            
+                            // Add boundingbox
+                            bbox = new THREE.BoundingBoxHelper(object, 0xff0000);
+                            bbox.update();
+                            bbox.visible = false;
+                            
+                            // Placeholder for loaded model to be removed
+                            loaded = object;
+                                                        
+                            addToEditor(object);
+                            addToEditor(wireframe);
+                            addToEditor(bbox);
+                        });
+                    }
+                });
+               
                 $('#load-obj').click(function() {
                     var file = $('#obj-file')[0].files[0];
                     
@@ -204,6 +300,8 @@
                                 
                                     if (loaded != undefined) {
                                         scene.remove(loaded);
+                                        scene.remove(wireframe);
+                                        scene.remove(bbox);
                                     }
 
                                     var contents = event.target.result;
@@ -227,32 +325,34 @@
 
                                     geometry.computeFaceNormals();
                                     geometry.computeVertexNormals();
+                                    
                                     if (geometry.useColor) {
                                         var material = new THREE.PointsMaterial({ vertexColors: true, size: .01});
-                                        var pointcloud = new THREE.Points(geometry, material);
+                                        var object = new THREE.Points(geometry, material);
                                     }
                                     else {
-                                        var material = new THREE.MeshPhongMaterial({color: 0x00ace6, specular: 0x009900, shininess: 70});
-                                        var pointcloud = new THREE.Mesh(geometry, material);
+                                        var material = new THREE.MeshPhongMaterial({color: 0xd9d9d9, shininess: 30});
+                                        var object = new THREE.Mesh(geometry, material);
                                     }
-                                    pointcloud.castShadow = true;
-                                    pointcloud.name = filename;
+                                    
+                                    object.castShadow = true;
+                                    object.name = filename;
                                     
                                     // Add wireframe
-                                    wireframe = new THREE.WireframeHelper(pointcloud, 0x0000ff);
+                                    wireframe = new THREE.WireframeHelper(object, 0x0000ff);
                                     wireframe.visible = false;
                                     
                                     // Add boundingbox
-                                    bbox = new THREE.BoundingBoxHelper(pointcloud, 0xff0000);
+                                    bbox = new THREE.BoundingBoxHelper(object, 0xff0000);
                                     bbox.update();
                                     bbox.visible = false;
                                     
                                     // Placeholder for loaded model to be removed
-                                    loaded = pointcloud;
+                                    loaded = object;
                                     
-                                    addToEditor(pointcloud);
+                                    addToEditor(object);
                                     addToEditor(wireframe);
-                                    addToEditor(bbox);                                    
+                                    addToEditor(bbox);
                                 }, false );
                                 reader.readAsText( file );
 
@@ -266,7 +366,6 @@
             });
             
             function addToEditor(object) {
-                
                 // Update scene objects
                 scene.add(object);
                 
@@ -275,9 +374,7 @@
                 lightsViewEdit();                
             }
             
-            function removeFromEditor(object) {
-                console.log("Remove from editor method");
-                
+            function removeFromEditor(object) {                
                 scene.remove(object);
             }
             
@@ -336,10 +433,10 @@
                 // Populate list in view and edit for Lights
                 if (lights != undefined) {
                     view = $('#scene-view-table');
-                    edit = $('#scene-edit-table');
+                    //edit = $('#scene-edit-table');
                     
                     view.html('');
-                    edit.html('');
+                    //edit.html('');
                     
                     view.append("<table id='light-scene-table'>");
                     // For adding grid
@@ -365,23 +462,6 @@
                         });
                     }
                     view.append("</table>");
-                    
-                    edit.append("<table id='light-edit-table'>");
-                    
-                    // Lights edit updates
-                    for (var i = 0; i < lights.length; i++) {
-                        var editOptions = "<input type='button' id='remove-light" + i + "' value='Remove'>";
-                        var row = "<tr><td>" + lights[i].type + i + "</td><td>" + editOptions + "</td></tr>";
-                        edit.append(row);
-                        $('#remove-light' + i).click(function() {
-                            var index = this.id.replace( /^\D+/g, '');
-                            
-                            removeFromEditor(lights[index]);
-                            lights.pop(index);
-                            lightsViewEdit();
-                        });
-                    }
-                    edit.append("</table>");
                 }
                 $('.view-tab-options').buttonset();
             }
@@ -391,23 +471,47 @@
         <div id='tools'>
             <div id="tabs">
                 <ul>
-                    <li><a href="#tabs-1">Create</a></li>
-                    <li><a href="#tabs-2">Load</a></li>
+                    <li><a href="#tabs-1">Load</a></li>
+                    <li><a href="#tabs-2">Lighting</a></li>
                     <li><a href="#tabs-3">View</a></li>
                     <li><a href="#tabs-4">Edit</a></li>
                 </ul>
                 <div id="tabs-1">
-                    <p>Create lighting objects in the scene</p>
+                    <p>Load an object in the scene</p>
+                    <form class='loaders'>
+                        <label for="obj-file" style='margin: 0 10px 0 8px;'>Load Object File</label>
+                        <input id="obj-file" type="file"/>
+                        <input id='load-obj' type='button' value='Load'/>
+                    </form>
+                    <form class='loaders'>
+                        <label for="texture-file" style='margin-left: 10px;'>Load Texture File</label>
+                        <input id="texture-file" type="file"/>
+                        <input id='load-texture' type='button' value='Load'/>
+                    </form>
+                    <div id='load-samples'>
+                    <p>Samples</p>
+                        <ul>
+                            <li><a href=#>Ant</a></li>
+                            <li><a href=#>Teapot</a></li>
+                            <li><a href=#>Jet</a></li>
+                            <li><a href=#>Cube</a></li>
+                            <li><a href=#>Pickup</a></li>
+                            <li><a href=#>Airplane</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="tabs-2">
+                    <p>Modify lighting in the scene</p>
                     <select id="light-menu">
-                      <option value="point-options">Point</option>
-                      <option value="directional-options">Directional</option>
-                      <option value="ambient-options">Ambient</option>
+                      <option value="point">Point</option>
+                      <option value="directional">Directional</option>
+                      <option value="ambient">Ambient</option>
                     </select>
-                    <div id='point-options' class ='light'>
+                    <div id='point' class ='light'>
                         <form class='options'>
                             <table>
                                 <tr>
-                                    <th colspan=4>Create a Point Light</td>
+                                    <th colspan=4>Point Light</td>
                                 </tr>
                                 <tr>
                                     <td><label for='point-color'>Color:</label></td>
@@ -427,17 +531,14 @@
                                     <td><label for='point-posz'>Position Z:</label></td>
                                     <td><div id='point-posz' class='position'></div></td>
                                 </tr>
-                                <tr>
-                                    <td><input id='create-point' type='button' value='Create'></td>
-                                </tr>
                             </table>
                         </form>
                     </div>
-                    <div id='directional-options' class ='light'>
+                    <div id='directional' class ='light'>
                         <form class='options'>
                             <table>
                                 <tr>
-                                    <th colspan=4>Create a Directional Light</td>
+                                    <th colspan=4>Directional Light</td>
                                 </tr>
                                 <tr>
                                     <td><label for='directional-color'>Color:</label></td>
@@ -457,17 +558,14 @@
                                     <td><label for='directional-posz'>Position Z:</label></td>
                                     <td><div id='directional-posz' class='position'></div></td>
                                 </tr>
-                                <tr>
-                                    <td><input id='create-directional' type='button' value='Create'></td>
-                                </tr>
                             </table>
                         </form>
                     </div>
-                    <div id='ambient-options' class ='light'>
+                    <div id='ambient' class ='light'>
                         <form class='options'>
                             <table>
                                 <tr>
-                                    <th colspan=4>Create Ambient Light</td>
+                                    <th colspan=4>Ambient Light</td>
                                 </tr>
                                 <tr>
                                     <td><label for='ambient-color'>Color:</label></td>
@@ -487,35 +585,19 @@
                                     <td><label for='ambient-posz'>Position Z:</label></td>
                                     <td><div id='ambient-posz' class='position'></div></td>
                                 </tr>
-                                <tr>
-                                    <td><input id='create-ambient' type='button' value='Create'></td>
-                                </tr>
                             </table>
                         </form>
                     </div>
                 </div>
-                <div id="tabs-2">
-                    <p>Load an object in the scene</p>
-                    <form class='loaders'>
-                        <label for="obj-file" style='margin: 0 10px 0 8px;'>Load Object File</label>
-                        <input id="obj-file" type="file"/>
-                        <input id='load-obj' type='button' value='Load'/>
-                    </form>
-                    <form class='loaders'>
-                        <label for="texture-file" style='margin-left: 10px;'>Load Texture File</label>
-                        <input id="texture-file" type="file"/>
-                        <input id='load-texture' type='button' value='Load'/>
-                    </form>
-                </div>
                 <div id="tabs-3">
                     <p>Toggle View of objects in the scene</p>
                     <div id='pointcloud-view'>
-                        <h3>Pointcloud</h3>
+                        <h3>Scene Objects</h3>
                         <table id='pointcloud-view-table' class='view-edit-tables'>
                         </table>
                     </div>
                     <div id='scene-view'>
-                        <h3>Scene Objects</h3>
+                        <h3>Lighting and Environment</h3>
                         <table id='scene-view-table' class='view-edit-tables'>
                         </table>
                     </div>
@@ -523,13 +605,8 @@
                 <div id="tabs-4">
                     <p>Edit an object in the scene</p>
                     <div id='pointcloud-edit'>
-                        <h3>Pointcloud</h3>
-                        <table id='pointcloud-edit-table' class='view-edit-tables'>
-                        </table>
-                    </div>
-                    <div id='scene-edit'>
                         <h3>Scene Objects</h3>
-                        <table id='scene-edit-table' class='view-edit-tables'>
+                        <table id='pointcloud-edit-table' class='view-edit-tables'>
                         </table>
                     </div>
                 </div>
@@ -642,9 +719,17 @@
 				scene.add(grid);				
 
 				// Lighting
-				var ambient = new THREE.AmbientLight(0x606060);
+				var ambient = new THREE.AmbientLight();
                 lights.push(ambient);
                 addToEditor(ambient);
+                
+                var point = new THREE.PointLight(0xff0000);
+                lights.push(point);
+                addToEditor(point);
+                
+                var directional = new THREE.DirectionalLight(0xffff99);
+                lights.push(directional);
+                addToEditor(directional);
 				
 				window.addEventListener( 'resize', onWindowResize, false );
 				
