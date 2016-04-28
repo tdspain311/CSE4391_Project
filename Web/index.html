@@ -296,6 +296,7 @@
                         } );
                         switch ( extension ) {
                             case 'ply':
+                                reader.readAsText(file);
                                 reader.addEventListener( 'load', function ( event ) {
                                 
                                     if (loaded != undefined) {
@@ -354,13 +355,25 @@
                                     addToEditor(wireframe);
                                     addToEditor(bbox);
                                 }, false );
-                                reader.readAsText( file );
+                                
 
                                 break;
                             default:
-                                console.log("unsupported file format");
+                                alert("unsupported file format");
                                 break;
                         }
+                    }
+                });
+                
+                $('#load-texture').click(function () {
+                    console.log("loading texture");
+                    var file = $('#texture-file')[0].files[0];
+                    
+                    if (file != undefined) {
+                        var loader = new THREE.TextureLoader();
+                        loader.load(file, function(texture) {
+                            console.log(texture);
+                        });
                     }
                 });
             });
